@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from collections import defaultdict
+from slugify import slugify
 import re
 
 # Shopify CSV Format https://help.shopify.com/en/manual/products/import-export/using-csv#import-csv-files-into-google-sheets
@@ -11,7 +12,12 @@ wc_data = pd.read_csv(WC_EXPORT_CSV)
 shopify_data = pd.DataFrame()
 # print(wc_data.info)
 
-#shopify_data['Handle'] = ''
+wc_data['slug']= wc_data['Name'].apply(lambda x: slugify(x))
+print(wc_data['slug'])
+exit()
+# shopify_data['Handle'] = wc_data[['SKU','Name']].apply(
+#     lambda x: x.split('-')[0]
+# )
 shopify_data['ID'] = wc_data['ID']
 shopify_data['Title'] = wc_data['Name']
 shopify_data['Body (HTML)'] = wc_data['Description']
