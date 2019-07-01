@@ -12,13 +12,16 @@ wc_data = pd.read_csv(WC_EXPORT_CSV)
 shopify_data = pd.DataFrame()
 # print(wc_data.info)
 
-wc_data['slug']= wc_data['Name'].apply(lambda x: slugify(x))
-print(wc_data['slug'])
-exit()
-# shopify_data['Handle'] = wc_data[['SKU','Name']].apply(
-#     lambda x: x.split('-')[0]
-# )
-shopify_data['ID'] = wc_data['ID']
+wc_data['slug'] = wc_data['Name'].apply(lambda x: slugify(x))
+wc_data['new_sku'] = wc_data['SKU'].fillna('').apply(
+    lambda x: x.split('-')[0]
+)
+new_wc_data = wc_data[['slug', 'SKU']
+                      ].loc[wc_data['Type'] != 'variation']
+jointed = wc_data.join(
+    new_wc_data.set_index('SKU'), on='new_sku', rsuffix='_other', lsuffix='_original',)
+shopify_data['Handle'] = jointed['slug_other']
+
 shopify_data['Title'] = wc_data['Name']
 shopify_data['Body (HTML)'] = wc_data['Description']
 shopify_data['Vendor'] = 'Example Vendor'
@@ -39,7 +42,8 @@ shopify_data['Option2 Value'] = wc_data['Attribute 2 value(s)']
 shopify_data['Option3 Name'] = wc_data['Attribute 3 name']
 shopify_data['Option3 Value'] = wc_data['Attribute 3 value(s)']
 shopify_data['Option1 Name'].loc[shopify_data['Option2 Name'].isna()] = 'Title'
-shopify_data['Option1 Value'].loc[shopify_data['Option2 Name'].isna()] = 'Default Title'
+shopify_data['Option1 Value'].loc[shopify_data['Option2 Name'].isna()
+                                  ] = 'Default Title'
 
 shopify_data['Variant Price'] = wc_data['Regular price']
 shopify_data['Variant Compare At Price'] = wc_data['Sale price']
