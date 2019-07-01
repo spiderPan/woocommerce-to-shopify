@@ -1,5 +1,5 @@
 ### Install
-Run `pip3 install -r ./requirement.txt` within the directory
+Run `pip3 install -r ./requirements.txt` within the directory
 
 ### Run
 1. Export `csv` from `Woocommerce` and name it to be `wc-export.csv`
