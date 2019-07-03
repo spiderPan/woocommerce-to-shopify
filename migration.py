@@ -12,6 +12,15 @@ wc_data = pd.read_csv(WC_EXPORT_CSV)
 shopify_data = pd.DataFrame()
 # print(wc_data.info)
 
+
+attribute_keys = wc_data.columns[wc_data.columns.str.endswith(' name')]
+attribute_values = wc_data.columns[wc_data.columns.str.endswith('value(s)')]
+
+wc_data_attributes = pd.lreshape(wc_data,{'key':attribute_keys,'value':attribute_values})
+wc_data_attributes = wc_data_attributes.pivot(index='ID',columns='key',values='value')
+
+wc_data = pd.merge(wc_data,wc_data_attributes,on='ID')
+
 wc_data['slug'] = wc_data['Name'].apply(lambda x: slugify(x))
 wc_data['new_sku'] = wc_data['SKU'].fillna('').apply(
     lambda x: x.split('-')[0]
@@ -24,7 +33,7 @@ shopify_data['Handle'] = jointed['slug_other']
 
 shopify_data['Title'] = wc_data['Name']
 shopify_data['Body (HTML)'] = wc_data['Description']
-shopify_data['Vendor'] = 'Example Vendor'
+shopify_data['Vendor'] = wc_data['Manufacturer']
 
 wc_data['new_tags'] = wc_data[['Tags', 'Categories']].fillna(value='').apply(
     lambda x: re.split('>|,', (x['Categories']+x['Tags']).strip()), axis=1)
