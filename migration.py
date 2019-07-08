@@ -16,10 +16,12 @@ shopify_data = pd.DataFrame()
 attribute_keys = wc_data.columns[wc_data.columns.str.endswith(' name')]
 attribute_values = wc_data.columns[wc_data.columns.str.endswith('value(s)')]
 
-wc_data_attributes = pd.lreshape(wc_data,{'key':attribute_keys,'value':attribute_values})
-wc_data_attributes = wc_data_attributes.pivot(index='ID',columns='key',values='value')
+wc_data_attributes = pd.lreshape(
+    wc_data, {'key': attribute_keys, 'value': attribute_values})
+wc_data_attributes = wc_data_attributes.pivot(
+    index='ID', columns='key', values='value')
 
-wc_data = pd.merge(wc_data,wc_data_attributes,on='ID')
+wc_data = pd.merge(wc_data, wc_data_attributes, on='ID')
 
 wc_data['slug'] = wc_data['Name'].apply(lambda x: slugify(x))
 wc_data['new_sku'] = wc_data['SKU'].fillna('').apply(
@@ -43,7 +45,7 @@ shopify_data['Tags'] = wc_data['new_tags'].apply(
 published_dict = defaultdict(lambda: 'FALSE')
 published_dict[1] = 'TRUE'
 shopify_data['Published'] = wc_data['Published'].map(published_dict)
-
+shopify_data['Type'] = wc_data['Type']
 shopify_data['Option1 Name'] = wc_data['Attribute 1 name']
 shopify_data['Option1 Value'] = wc_data['Attribute 1 value(s)']
 shopify_data['Option2 Name'] = wc_data['Attribute 2 name']
@@ -61,11 +63,15 @@ shopify_data['Variant Requires Shipping'] = 'TRUE'
 taxable_dict = defaultdict(lambda: 'FALSE')
 taxable_dict['taxable'] = 'TRUE'
 shopify_data['Variant Taxable'] = wc_data['Tax status'].map(taxable_dict)
-
 shopify_data['Image Src'] = wc_data['Images']
-shopify_data['Image Position'] = 1
+shopify_data['Variant Image'] = wc_data['Images']
 
-# shopify_data['Variant Image'] =
+is_variation = shopify_data['Type'] == 'variation'
+
+shopify_data.loc[is_variation, 'Image Src'] = ''
+shopify_data.loc[shopify_data['Type'] != 'variation', 'Variant Image'] = ''
+
+shopify_data['Image Position'] = 1
 shopify_data['Variant Weight Unit'] = 'lb'
 
 empty_columns = pd.DataFrame(
@@ -97,5 +103,8 @@ empty_columns = pd.DataFrame(
         'Google Shopping / Custom Label 4',
         'Cost per item'])
 shopify_data = pd.concat([shopify_data, empty_columns], axis=1)
-print(shopify_data.info)
+
+drop_columns = ['Type']
+shopify_data = shopify_data.drop(drop_columns, axis=1)
+
 shopify_data.to_csv(SHOPIFY_IMPORT_CSV, mode='w+')
