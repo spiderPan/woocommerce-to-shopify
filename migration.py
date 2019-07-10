@@ -6,12 +6,19 @@ import re
 
 # Shopify CSV Format https://help.shopify.com/en/manual/products/import-export/using-csv#import-csv-files-into-google-sheets
 
-WC_EXPORT_CSV = 'wc-export.csv'
+WC_EXPORT_CSV = 'wc-export-en.csv'
 SHOPIFY_IMPORT_CSV = 'shopify-import.csv'
-wc_data = pd.read_csv(WC_EXPORT_CSV)
+wc_full_data = pd.read_csv(WC_EXPORT_CSV)
 shopify_data = pd.DataFrame()
-# print(wc_data.info)
+# print(wc_full_data['Visibility in catalog'].dtypes)
 
+
+# wc_data Clean UP
+is_french = wc_full_data['SKU'].astype(str).str.contains('_fr')
+wc_data_french = wc_full_data[is_french]
+wc_data = wc_full_data[is_french == False]
+# wc_data contains English rows
+# wc_data_french contains French Rows
 
 attribute_keys = wc_data.columns[wc_data.columns.str.endswith(' name')]
 attribute_values = wc_data.columns[wc_data.columns.str.endswith('value(s)')]
@@ -31,10 +38,12 @@ new_wc_data = wc_data[['slug', 'SKU']
                       ].loc[wc_data['Type'] != 'variation']
 jointed = wc_data.join(
     new_wc_data.set_index('SKU'), on='new_sku', rsuffix='_other', lsuffix='_original',)
-shopify_data['Handle'] = jointed['slug_other']
 
+# Assign to shopify_data
+shopify_data['Handle'] = jointed['slug_other']
 shopify_data['Title'] = wc_data['Name']
-shopify_data['Body (HTML)'] = wc_data['Description']
+shopify_data['Body (HTML)'] = wc_data['Description'].replace(
+    r'\s+|\\n', ' ', regex=True, inplace=True)
 shopify_data['Vendor'] = wc_data['Manufacturer']
 
 wc_data['new_tags'] = wc_data[['Tags', 'Categories']].fillna(value='').apply(
@@ -46,15 +55,17 @@ published_dict = defaultdict(lambda: 'FALSE')
 published_dict[1] = 'TRUE'
 shopify_data['Published'] = wc_data['Published'].map(published_dict)
 shopify_data['Type'] = wc_data['Type']
-shopify_data['Option1 Name'] = wc_data['Attribute 1 name']
-shopify_data['Option1 Value'] = wc_data['Attribute 1 value(s)']
-shopify_data['Option2 Name'] = wc_data['Attribute 2 name']
-shopify_data['Option2 Value'] = wc_data['Attribute 2 value(s)']
-shopify_data['Option3 Name'] = wc_data['Attribute 3 name']
-shopify_data['Option3 Value'] = wc_data['Attribute 3 value(s)']
-shopify_data['Option1 Name'].loc[shopify_data['Option2 Name'].isna()] = 'Title'
-shopify_data['Option1 Value'].loc[shopify_data['Option2 Name'].isna()
-                                  ] = 'Default Title'
+
+is_variation = shopify_data['Type'] == 'variation'
+is_simple = shopify_data['Type'] == 'simple'
+is_not_variation = shopify_data['Type'] != 'variation'
+
+wc_data['Packaging'].fillna(value='')
+
+shopify_data['Option1 Name'] = 'Packaging'
+shopify_data['Option1 Value'] = wc_data['Packaging']
+shopify_data.loc[is_simple, 'Option1 Name'] = 'Title'
+shopify_data.loc[is_simple, 'Option1 Value'] = 'Default Title'
 
 shopify_data['Variant Price'] = wc_data['Regular price']
 shopify_data['Variant Compare At Price'] = wc_data['Sale price']
@@ -65,11 +76,16 @@ taxable_dict['taxable'] = 'TRUE'
 shopify_data['Variant Taxable'] = wc_data['Tax status'].map(taxable_dict)
 shopify_data['Image Src'] = wc_data['Images']
 shopify_data['Variant Image'] = wc_data['Images']
-
-is_variation = shopify_data['Type'] == 'variation'
+shopify_data['Variant Inventory Policy'] = 'continue'
+shopify_data['Variant Fulfillment Service'] = 'manual'
 
 shopify_data.loc[is_variation, 'Image Src'] = ''
-shopify_data.loc[shopify_data['Type'] != 'variation', 'Variant Image'] = ''
+shopify_data.loc[is_variation, 'Title'] = ''
+shopify_data.loc[is_variation, 'Body (HTML)'] = ''
+shopify_data.loc[is_variation, 'Vendor'] = ''
+shopify_data.loc[is_variation, 'Tags'] = ''
+
+shopify_data.loc[is_not_variation, 'Variant Image'] = ''
 
 shopify_data['Image Position'] = 1
 shopify_data['Variant Weight Unit'] = 'lb'
