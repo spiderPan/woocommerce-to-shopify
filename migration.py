@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from collections import defaultdict
 from slugify import slugify
+from html2text import unescape
 import re
 
 # Shopify CSV Format https://help.shopify.com/en/manual/products/import-export/using-csv#import-csv-files-into-google-sheets
@@ -54,7 +55,7 @@ shopify_data['Vendor'] = wc_data['Manufacturer']
 wc_data['new_tags'] = wc_data[['Tags', 'Categories']].fillna(value='').apply(
     lambda x: re.split('>|,', (x['Categories']+x['Tags']).strip()), axis=1)
 shopify_data['Tags'] = wc_data['new_tags'].apply(
-    lambda x: ','.join(np.unique([y.strip() for y in x])))
+    lambda x: unescape(','.join(np.unique([y.strip() for y in x]))))
 
 published_dict = defaultdict(lambda: 'FALSE')
 published_dict[1] = 'TRUE'
