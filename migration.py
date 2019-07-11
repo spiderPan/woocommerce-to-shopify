@@ -47,8 +47,8 @@ jointed = wc_data.join(
 # Assign to shopify_data
 shopify_data['Handle'] = jointed['slug_other']
 shopify_data['Title'] = wc_data['Name']
-shopify_data['Body (HTML)'] = wc_data['Description'].replace(
-    r'\s+|\\n', ' ', regex=True, inplace=True)
+shopify_data['Variant SKU'] = wc_data['SKU']
+shopify_data['Body (HTML)'] = wc_data['Description']
 shopify_data['Vendor'] = wc_data['Manufacturer']
 
 wc_data['new_tags'] = wc_data[['Tags', 'Categories']].fillna(value='').apply(
@@ -99,7 +99,6 @@ shopify_data['Variant Weight Unit'] = 'lb'
 empty_columns = pd.DataFrame(
     columns=[
         'Type',
-        'Variant SKU',
         'Variant Grams',
         'Variant Inventory Tracker',
         'Variant Barcode',
