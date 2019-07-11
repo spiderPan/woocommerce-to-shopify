@@ -17,6 +17,10 @@ shopify_data = pd.DataFrame()
 
 
 # wc_data Clean UP
+wc_full_data['Images'].fillna('')
+wc_full_data = wc_full_data.replace(
+    to_replace=r'\\', value='', regex=True).sort_values(by=['Type', 'SKU'])
+
 is_french = wc_full_data['SKU'].astype(str).str.contains('_fr')
 wc_data_french = wc_full_data[is_french]
 wc_data = wc_full_data[is_french == False]
@@ -144,7 +148,7 @@ last_cols = np.setdiff1d(full_cols, first_cols)
 groupby_strategy = {col: 'first' for col in first_cols}
 groupby_strategy.update({col: 'last' for col in last_cols})
 
-shopify_data = shopify_data.sort_values(by=['WC Type']).groupby(
+shopify_data = shopify_data.sort_values(by=['WC Type', 'Variant SKU']).groupby(
     ['Variation Merge'], as_index=False).agg(groupby_strategy)
 
 
