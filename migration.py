@@ -8,6 +8,8 @@ import re
 
 WC_EXPORT_CSV = 'wc-export-en.csv'
 SHOPIFY_IMPORT_CSV = 'shopify-import.csv'
+SHOPIFY_EXAMPLE_CSV = 'shopify-example.csv'
+shopify_example_data = pd.read_csv(SHOPIFY_EXAMPLE_CSV)
 wc_full_data = pd.read_csv(WC_EXPORT_CSV)
 shopify_data = pd.DataFrame()
 # print(wc_full_data['Visibility in catalog'].dtypes)
@@ -17,6 +19,9 @@ shopify_data = pd.DataFrame()
 is_french = wc_full_data['SKU'].astype(str).str.contains('_fr')
 wc_data_french = wc_full_data[is_french]
 wc_data = wc_full_data[is_french == False]
+# Clean the invalid name
+wc_data = wc_data[wc_data['Name'].astype(str).str.contains('#REF!') == False]
+
 # wc_data contains English rows
 # wc_data_french contains French Rows
 
@@ -54,11 +59,12 @@ shopify_data['Tags'] = wc_data['new_tags'].apply(
 published_dict = defaultdict(lambda: 'FALSE')
 published_dict[1] = 'TRUE'
 shopify_data['Published'] = wc_data['Published'].map(published_dict)
-shopify_data['Type'] = wc_data['Type']
+shopify_data['WC Type'] = wc_data['Type']
 
-is_variation = shopify_data['Type'] == 'variation'
-is_simple = shopify_data['Type'] == 'simple'
-is_not_variation = shopify_data['Type'] != 'variation'
+is_variation = shopify_data['WC Type'] == 'variation'
+is_simple = shopify_data['WC Type'] == 'simple'
+is_variable = shopify_data['WC Type'] == 'variable'
+is_not_variation = shopify_data['WC Type'] != 'variation'
 
 wc_data['Packaging'].fillna(value='')
 
@@ -96,8 +102,6 @@ empty_columns = pd.DataFrame(
         'Variant SKU',
         'Variant Grams',
         'Variant Inventory Tracker',
-        'Variant Inventory Policy',
-        'Variant Fulfillment Service',
         'Variant Barcode',
         'Variant Tax Code',
         'Image Alt Text',
@@ -117,10 +121,33 @@ empty_columns = pd.DataFrame(
         'Google Shopping / Custom Label 2',
         'Google Shopping / Custom Label 3',
         'Google Shopping / Custom Label 4',
+        'Option2 Name',
+        'Option2 Value',
+        'Option3 Name',
+        'Option3 Value',
         'Cost per item'])
 shopify_data = pd.concat([shopify_data, empty_columns], axis=1)
 
-drop_columns = ['Type']
-shopify_data = shopify_data.drop(drop_columns, axis=1)
+
+# Combine variants with its first variations
+shopify_data = shopify_data.dropna(axis=0, subset=['Handle'])
+shopify_data['Variation Merge'] = shopify_data[['Option1 Value', 'Handle']].fillna(value='').apply(
+    lambda x: x['Handle']+'-'+x['Option1 Value'].split(',')[0], axis=1)
+
+
+first_cols = ['Title', 'Body (HTML)', 'Vendor',
+              'Tags', 'Published', 'Image Src', 'Image Position']
+full_cols = shopify_data.columns.values.tolist()
+full_cols.remove('Variation Merge')
+last_cols = np.setdiff1d(full_cols, first_cols)
+
+groupby_strategy = {col: 'first' for col in first_cols}
+groupby_strategy.update({col: 'last' for col in last_cols})
+
+shopify_data = shopify_data.sort_values(by=['WC Type']).groupby(
+    ['Variation Merge'], as_index=False).agg(groupby_strategy)
+
+
+shopify_data = shopify_data[shopify_example_data.columns.values]
 
 shopify_data.to_csv(SHOPIFY_IMPORT_CSV, mode='w+')
