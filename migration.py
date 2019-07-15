@@ -7,8 +7,8 @@ import re
 
 # Shopify CSV Format https://help.shopify.com/en/manual/products/import-export/using-csv#import-csv-files-into-google-sheets
 
-WC_EXPORT_CSV = 'wc-export-en.csv'
-SHOPIFY_IMPORT_CSV = 'shopify-import.csv'
+WC_EXPORT_CSV = 'wc-export/wc-export-product-bww.csv'
+SHOPIFY_IMPORT_CSV = 'shopify-import/shopify-import-bww.csv'
 SHOPIFY_EXAMPLE_CSV = 'shopify-example.csv'
 shopify_example_data = pd.read_csv(SHOPIFY_EXAMPLE_CSV)
 wc_full_data = pd.read_csv(WC_EXPORT_CSV)
@@ -17,10 +17,8 @@ shopify_data = pd.DataFrame()
 
 
 # wc_data Clean UP
-wc_full_data['Images'].fillna('')
 wc_full_data = wc_full_data.replace(
     to_replace=r'\\', value='', regex=True).sort_values(by=['Type', 'SKU'])
-
 is_french = wc_full_data['SKU'].astype(str).str.contains('_fr')
 wc_data_french = wc_full_data[is_french]
 wc_data = wc_full_data[is_french == False]
@@ -71,6 +69,7 @@ is_simple = shopify_data['WC Type'] == 'simple'
 is_variable = shopify_data['WC Type'] == 'variable'
 is_not_variation = shopify_data['WC Type'] != 'variation'
 
+
 wc_data['Packaging'].fillna(value='')
 
 shopify_data['Option1 Name'] = 'Packaging'
@@ -98,7 +97,10 @@ shopify_data.loc[is_variation, 'Tags'] = ''
 
 shopify_data.loc[is_not_variation, 'Variant Image'] = ''
 
+is_empty_image = shopify_data['Image Src'].isna()
 shopify_data['Image Position'] = 1
+shopify_data.loc[is_empty_image, 'Image Position'] = ''
+
 shopify_data['Variant Weight Unit'] = 'lb'
 
 empty_columns = pd.DataFrame(
@@ -140,7 +142,7 @@ shopify_data['Variation Merge'] = shopify_data[['Option1 Value', 'Handle']].fill
 
 
 first_cols = ['Title', 'Body (HTML)', 'Vendor',
-              'Tags', 'Published', 'Image Src', 'Image Position']
+              'Tags', 'Published', 'Image Src']
 full_cols = shopify_data.columns.values.tolist()
 full_cols.remove('Variation Merge')
 last_cols = np.setdiff1d(full_cols, first_cols)
@@ -153,5 +155,7 @@ shopify_data = shopify_data.sort_values(by=['WC Type', 'Variant SKU']).groupby(
 
 
 shopify_data = shopify_data[shopify_example_data.columns.values]
+shopify_data.sort_values(by=['Handle', 'Title'],
+                         inplace=True, ascending=[True, False])
 
-shopify_data.to_csv(SHOPIFY_IMPORT_CSV, mode='w+')
+shopify_data.to_csv(SHOPIFY_IMPORT_CSV, mode='w+', index=False)
