@@ -160,4 +160,6 @@ shopify_data = shopify_data[shopify_example_data.columns.values]
 shopify_data.sort_values(by=['Handle', 'Title'],
                          inplace=True, ascending=[True, False])
 
+# %%
 shopify_data.to_csv(SHOPIFY_IMPORT_CSV, mode='w+', index=False)
+shopify_data
