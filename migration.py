@@ -1,3 +1,5 @@
+
+# %%
 import pandas as pd
 import numpy as np
 from collections import defaultdict
@@ -6,7 +8,7 @@ from html2text import unescape
 import re
 
 # Shopify CSV Format https://help.shopify.com/en/manual/products/import-export/using-csv#import-csv-files-into-google-sheets
-
+# %%
 WC_EXPORT_CSV = 'wc-export/wc-export-product-bww.csv'
 SHOPIFY_IMPORT_CSV = 'shopify-import/shopify-import-bww.csv'
 SHOPIFY_EXAMPLE_CSV = 'shopify-example.csv'
@@ -15,7 +17,7 @@ wc_full_data = pd.read_csv(WC_EXPORT_CSV)
 shopify_data = pd.DataFrame()
 # print(wc_full_data['Visibility in catalog'].dtypes)
 
-
+# %%
 # wc_data Clean UP
 wc_full_data = wc_full_data.replace(
     to_replace=r'\\', value='', regex=True).sort_values(by=['Type', 'SKU'])

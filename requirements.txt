@@ -2,3 +2,4 @@ pandas
 numpy
 python-slugify
 html2text
+jupyterlab
