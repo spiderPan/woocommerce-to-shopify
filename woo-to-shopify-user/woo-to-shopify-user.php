@@ -51,14 +51,8 @@ if ( ! class_exists( 'TBK_WOO_TO_SHOPIFY' ) ) {
 		public function export_users() {
 			check_admin_referer( self::EXPORT_NONCE );
 			$blog_id = get_current_blog_id();
-			$blog_name = get_bloginfo( 'name' );
-			if ( function_exists( 'get_blog_details' ) ) {
-				$blog_details = get_blog_details( $blog_id );
-				$blog_name = $blog_details->blogname;
-			}
 
-
-			$filename = 'users-' . $blog_name . '-' . time() . '.csv';
+			$filename = 'users-' . $blog_id . '-' . time() . '.csv';
 			$header_row = array(
 				'First Name',
 				'Last Name',
@@ -90,8 +84,8 @@ if ( ! class_exists( 'TBK_WOO_TO_SHOPIFY' ) ) {
 			foreach ( $customers as $customer ) {
 				$wc_customer = new WC_Customer( $customer->ID );
 				$data_rows[] = array(
-					$wc_customer->get_first_name(),
-					$wc_customer->get_last_name(),
+					$wc_customer->get_shipping_first_name(),
+					$wc_customer->get_shipping_last_name(),
 					$wc_customer->get_email(),
 					$wc_customer->get_shipping_company(),
 					$wc_customer->get_shipping_address(),
