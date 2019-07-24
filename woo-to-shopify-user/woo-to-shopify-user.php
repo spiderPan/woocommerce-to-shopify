@@ -51,10 +51,14 @@ if ( ! class_exists( 'TBK_WOO_TO_SHOPIFY' ) ) {
 		public function export_users() {
 			check_admin_referer( self::EXPORT_NONCE );
 			$blog_id = get_current_blog_id();
-			$blog_details = get_blog_details( $blog_id );
+			$blog_name = get_bloginfo( 'name' );
+			if ( function_exists( 'get_blog_details' ) ) {
+				$blog_details = get_blog_details( $blog_id );
+				$blog_name = $blog_details->blogname;
+			}
 
 
-			$filename = 'users-' . $blog_details->blogname . '-' . time() . '.csv';
+			$filename = 'users-' . $blog_name . '-' . time() . '.csv';
 			$header_row = array(
 				'First Name',
 				'Last Name',
@@ -89,15 +93,15 @@ if ( ! class_exists( 'TBK_WOO_TO_SHOPIFY' ) ) {
 					$wc_customer->get_first_name(),
 					$wc_customer->get_last_name(),
 					$wc_customer->get_email(),
-					$wc_customer->get_billing_company(),
-					$wc_customer->get_billing_address(),
-					$wc_customer->get_billing_address_2(),
-					$wc_customer->get_billing_city(),
-					$wc_states[ $wc_customer->get_billing_country() ][ $wc_customer->get_billing_state() ],
-					$wc_customer->get_billing_state(),
-					$wc_countries[ $wc_customer->get_billing_country() ],
-					$wc_customer->get_billing_country(),
-					$wc_customer->get_billing_postcode(),
+					$wc_customer->get_shipping_company(),
+					$wc_customer->get_shipping_address(),
+					$wc_customer->get_shipping_address_2(),
+					$wc_customer->get_shipping_city(),
+					$wc_states[ $wc_customer->get_shipping_country() ][ $wc_customer->get_shipping_state() ],
+					$wc_customer->get_shipping_state(),
+					$wc_countries[ $wc_customer->get_shipping_country() ],
+					$wc_customer->get_shipping_country(),
+					$wc_customer->get_shipping_postcode(),
 					$wc_customer->get_billing_phone(),
 					'no',
 					'0.00',
