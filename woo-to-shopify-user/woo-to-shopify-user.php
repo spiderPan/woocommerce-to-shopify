@@ -76,7 +76,6 @@ if ( ! class_exists( 'TBK_WOO_TO_SHOPIFY' ) ) {
 			);
 			$customers = get_users( array(
 				'blog_id' => $blog_id,
-				'role' => 'Customer',
 			) );
 			$wc_countries = WC()->countries->countries;
 			$wc_states = WC()->countries->states;
