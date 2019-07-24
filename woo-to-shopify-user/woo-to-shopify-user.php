@@ -50,7 +50,80 @@ if ( ! class_exists( 'TBK_WOO_TO_SHOPIFY' ) ) {
 
 		public function export_users() {
 			check_admin_referer( self::EXPORT_NONCE );
+			$blog_id = get_current_blog_id();
+			$blog_details = get_blog_details( $blog_id );
 
+
+			$filename = 'users-' . $blog_details->blogname . '-' . time() . '.csv';
+			$header_row = array(
+				'First Name',
+				'Last Name',
+				'Email',
+				'Company',
+				'Address1',
+				'Address2',
+				'City',
+				'Province',
+				'Province Code',
+				'Country',
+				'Country Code',
+				'Zip',
+				'Phone',
+				'Accepts Marketing',
+				'Total Spent',
+				'Total Orders',
+				'Tags',
+				'Note',
+				'Tax Exempt',
+			);
+			$customers = get_users( array(
+				'blog_id' => $blog_id,
+				'role' => 'Customer',
+			) );
+			$wc_countries = WC()->countries->countries;
+			$wc_states = WC()->countries->states;
+
+			foreach ( $customers as $customer ) {
+				$wc_customer = new WC_Customer( $customer->ID );
+				$data_rows[] = array(
+					$wc_customer->get_first_name(),
+					$wc_customer->get_last_name(),
+					$wc_customer->get_email(),
+					$wc_customer->get_billing_company(),
+					$wc_customer->get_billing_address(),
+					$wc_customer->get_billing_address_2(),
+					$wc_customer->get_billing_city(),
+					$wc_states[ $wc_customer->get_billing_country() ][ $wc_customer->get_billing_state() ],
+					$wc_customer->get_billing_state(),
+					$wc_countries[ $wc_customer->get_billing_country() ],
+					$wc_customer->get_billing_country(),
+					$wc_customer->get_billing_postcode(),
+					$wc_customer->get_billing_phone(),
+					'no',
+					'0.00',
+					'0',
+					'',
+					'',
+					'',
+				);
+			}
+
+			$fh = @fopen( 'php://output', 'w' );
+			header( 'Cache-Control: must-revalidate, post-check=0, pre-check=0' );
+			header( 'Content-Description: File Transfer' );
+			header( 'Content-type: text/csv' );
+			header( "Content-Disposition: attachment; filename={$filename}" );
+			header( 'Expires: 0' );
+			header( 'Pragma: public' );
+			fputcsv( $fh, $header_row );
+			foreach ( $data_rows as $data_row ) {
+				fputcsv( $fh, $data_row );
+			}
+			fclose( $fh );
+
+			ob_end_flush();
+
+			die();
 		}
 
 		public function create_admin_page() {
@@ -71,18 +144,6 @@ if ( ! class_exists( 'TBK_WOO_TO_SHOPIFY' ) ) {
 				</form>
 			</div>
 			<?php
-		}
-
-		public function report_error( $error ) {
-			$error_log = plugin_dir_path( __FILE__ ) . 'error_log.txt';
-			$log = 'Time:' . current_time( 'mysql', 0 ) . PHP_EOL . '----- ERROR -----' . PHP_EOL;
-			$log .= 'Message: ' . $error . PHP_EOL;
-			$log .= '----- ERROR END-----' . PHP_EOL . '--------------------' . PHP_EOL . PHP_EOL;
-			file_put_contents( $error_log, $log, FILE_APPEND );
-			$admin_email = [ 'panbanglanfeng@gmail.com' ];
-			$subject = 'Error in Garrison Brewing';
-			$message = $error;
-			wp_mail( $admin_email, $subject, $message );
 		}
 	}
 
