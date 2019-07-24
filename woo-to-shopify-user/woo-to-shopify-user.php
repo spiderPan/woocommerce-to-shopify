@@ -84,8 +84,8 @@ if ( ! class_exists( 'TBK_WOO_TO_SHOPIFY' ) ) {
 			foreach ( $customers as $customer ) {
 				$wc_customer = new WC_Customer( $customer->ID );
 				$data_rows[] = array(
-					$wc_customer->get_shipping_first_name(),
-					$wc_customer->get_shipping_last_name(),
+					$wc_customer->get_first_name(),
+					$wc_customer->get_last_name(),
 					$wc_customer->get_email(),
 					$wc_customer->get_shipping_company(),
 					$wc_customer->get_shipping_address(),
