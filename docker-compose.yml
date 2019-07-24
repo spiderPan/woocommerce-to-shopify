@@ -1,0 +1,45 @@
+version: "3.3"
+
+services:
+    db:
+        image: mysql:5.7
+        volumes:
+            - db_data:/var/lib/mysql
+        restart: always
+        environment:
+            MYSQL_ROOT_PASSWORD: BDFkmsgm
+            MYSQL_DATABASE: wp_tbk_test
+            MYSQL_USER: wp_tbk_test
+            MYSQL_PASSWORD: xXVmkWud
+
+    phpmyadmin:
+        depends_on:
+            - db
+        image: phpmyadmin/phpmyadmin
+        ports:
+            - 8123:80
+        environment:
+            MYSQL_ROOT_PASSWORD: BDFkmsgm
+            MYSQL_USER: wp_tbk_test
+            MYSQL_PASSWORD: xXVmkWud
+
+    wordpress:
+        depends_on:
+            - db
+        image: wordpress:latest
+        volumes:
+            - wordpress_data:/var/www/html
+            - ./woo-to-shopify-user:/var/www/html/wp-content/plugins/woo-to-shopify-user
+        ports:
+            - 8008:80
+        restart: always
+        environment:
+            WORDPRESS_DB_HOST: db
+            WORDPRESS_DB_USER: wp_tbk_test
+            WORDPRESS_DB_PASSWORD: xXVmkWud
+            WORDPRESS_DB_NAME: wp_tbk_test
+            WORDPRESS_DEBUG: 1
+
+volumes:
+    db_data:
+    wordpress_data:
