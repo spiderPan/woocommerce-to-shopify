@@ -9,8 +9,8 @@ import re
 
 # Shopify CSV Format https://help.shopify.com/en/manual/products/import-export/using-csv#import-csv-files-into-google-sheets
 # %%
-WC_EXPORT_CSV = 'wc-export/wc-export-product-shopatstop.csv'
-SHOPIFY_IMPORT_CSV = 'shopify-import/shopify-import-shopatstop.csv'
+WC_EXPORT_CSV = 'wc-export/wc-export-product-aw.csv'
+SHOPIFY_IMPORT_CSV = 'shopify-import/shopify-import-aw.csv'
 SHOPIFY_EXAMPLE_CSV = 'shopify-example.csv'
 shopify_example_data = pd.read_csv(SHOPIFY_EXAMPLE_CSV)
 wc_full_data = pd.read_csv(WC_EXPORT_CSV)
@@ -162,3 +162,4 @@ shopify_data.sort_values(by=['Handle', 'Title'],
 
 # %%
 shopify_data.to_csv(SHOPIFY_IMPORT_CSV, mode='w+', index=False)
+shopify_data
