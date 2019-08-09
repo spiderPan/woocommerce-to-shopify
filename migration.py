@@ -40,9 +40,16 @@ wc_data_attributes = wc_data_attributes.pivot(
 wc_data = pd.merge(wc_data, wc_data_attributes, on='ID')
 
 wc_data['slug'] = wc_data['Name'].apply(lambda x: slugify(x))
+slug_mask = wc_data['slug'].duplicated(keep=False)
+wc_data.loc[slug_mask, ['slug','Name']].sort_values(by=['Name'])
+
+# %%
+wc_data.loc[slug_mask,
+            'slug'] += wc_data.groupby('slug').cumcount().add(1).astype(str)
 wc_data['new_sku'] = wc_data['SKU'].fillna('').apply(
     lambda x: x.split('-')[0]
 )
+
 new_wc_data = wc_data[['slug', 'SKU']
                       ].loc[wc_data['Type'] != 'variation']
 jointed = wc_data.join(
@@ -90,6 +97,10 @@ shopify_data['Image Src'] = wc_data['Images']
 shopify_data['Variant Image'] = wc_data['Images']
 shopify_data['Variant Inventory Policy'] = 'continue'
 shopify_data['Variant Fulfillment Service'] = 'manual'
+shopify_data['Variant Weight Unit'] = 'lb'
+shopify_data['Variant Grams'] = wc_data['Weight (lbs)'] * 453.59
+shopify_data['Variant Grams'] = shopify_data['Variant Grams'].fillna(
+    0).round(0).astype(int)
 
 shopify_data.loc[is_variation, 'Image Src'] = ''
 shopify_data.loc[is_variation, 'Title'] = ''
@@ -103,12 +114,10 @@ is_empty_image = shopify_data['Image Src'].isna()
 shopify_data['Image Position'] = 1
 shopify_data.loc[is_empty_image, 'Image Position'] = ''
 
-shopify_data['Variant Weight Unit'] = 'lb'
 
 empty_columns = pd.DataFrame(
     columns=[
         'Type',
-        'Variant Grams',
         'Variant Inventory Tracker',
         'Variant Barcode',
         'Variant Tax Code',
@@ -160,6 +169,13 @@ shopify_data = shopify_data[shopify_example_data.columns.values]
 shopify_data.sort_values(by=['Handle', 'Title'],
                          inplace=True, ascending=[True, False])
 
+shopify_data['Variant SKU'] = shopify_data['Variant SKU'].apply(
+    lambda x: x.split(':')[1]
+)
+
 # %%
 shopify_data.to_csv(SHOPIFY_IMPORT_CSV, mode='w+', index=False)
 shopify_data
+
+
+# %%
