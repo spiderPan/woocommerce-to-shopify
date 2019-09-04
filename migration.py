@@ -40,10 +40,10 @@ wc_data_attributes = wc_data_attributes.pivot(
 wc_data = pd.merge(wc_data, wc_data_attributes, on='ID')
 
 wc_data['slug'] = wc_data['Name'].apply(lambda x: slugify(x))
-slug_mask = wc_data['slug'].duplicated(keep=False)
-wc_data.loc[slug_mask, ['slug','Name']].sort_values(by=['Name'])
 
 # %%
+slug_mask = wc_data['slug'].duplicated(keep=False)
+wc_data.loc[slug_mask, ['slug', 'Name']].sort_values(by=['Name'])
 wc_data.loc[slug_mask,
             'slug'] += wc_data.groupby('slug').cumcount().add(1).astype(str)
 wc_data['new_sku'] = wc_data['SKU'].fillna('').apply(
@@ -109,10 +109,8 @@ shopify_data.loc[is_variation, 'Vendor'] = ''
 shopify_data.loc[is_variation, 'Tags'] = ''
 
 shopify_data.loc[is_not_variation, 'Variant Image'] = ''
+# %%
 
-is_empty_image = shopify_data['Image Src'].isna()
-shopify_data['Image Position'] = 1
-shopify_data.loc[is_empty_image, 'Image Position'] = ''
 
 
 empty_columns = pd.DataFrame(
@@ -153,7 +151,7 @@ shopify_data['Variation Merge'] = shopify_data[['Option1 Value', 'Handle']].fill
 
 
 first_cols = ['Title', 'Body (HTML)', 'Vendor',
-              'Tags', 'Published', 'Image Src']
+              'Tags', 'Published', 'Image Src', 'Variant SKU']
 full_cols = shopify_data.columns.values.tolist()
 full_cols.remove('Variation Merge')
 last_cols = np.setdiff1d(full_cols, first_cols)
@@ -164,6 +162,10 @@ groupby_strategy.update({col: 'last' for col in last_cols})
 shopify_data = shopify_data.sort_values(by=['WC Type', 'Variant SKU']).groupby(
     ['Variation Merge'], as_index=False).agg(groupby_strategy)
 
+#%%
+is_empty_image = shopify_data['Image Src'].str.len() < 10
+shopify_data['Image Position'] = 1
+shopify_data.loc[is_empty_image, 'Image Position'] = ''
 
 shopify_data = shopify_data[shopify_example_data.columns.values]
 shopify_data.sort_values(by=['Handle', 'Title'],
