@@ -9,8 +9,8 @@ import re
 
 # Shopify CSV Format https://help.shopify.com/en/manual/products/import-export/using-csv#import-csv-files-into-google-sheets
 # %%
-WC_EXPORT_CSV = 'wc-export/wc-export-product-aw.csv'
-SHOPIFY_IMPORT_CSV = 'shopify-import/shopify-import-aw.csv'
+WC_EXPORT_CSV = 'wc-export/wc-export-product-shopatstop.csv'
+SHOPIFY_IMPORT_CSV = 'shopify-import/shopify-import-shopatstop.csv'
 SHOPIFY_EXAMPLE_CSV = 'shopify-example.csv'
 shopify_example_data = pd.read_csv(SHOPIFY_EXAMPLE_CSV)
 wc_full_data = pd.read_csv(WC_EXPORT_CSV)
@@ -24,6 +24,7 @@ is_french = wc_full_data['SKU'].astype(str).str.contains('_fr')
 wc_data_french = wc_full_data[is_french]
 wc_data = wc_full_data[is_french == False]
 # Clean the invalid name
+wc_data['Name'] = wc_data['Name'].astype(str)
 wc_data = wc_data[wc_data['Name'].astype(str).str.contains('#REF!') == False]
 
 # wc_data contains English rows
@@ -109,10 +110,8 @@ shopify_data.loc[is_variation, 'Vendor'] = ''
 shopify_data.loc[is_variation, 'Tags'] = ''
 
 shopify_data.loc[is_not_variation, 'Variant Image'] = ''
+
 # %%
-
-
-
 empty_columns = pd.DataFrame(
     columns=[
         'Type',
@@ -178,6 +177,3 @@ shopify_data['Variant SKU'] = shopify_data['Variant SKU'].apply(
 # %%
 shopify_data.to_csv(SHOPIFY_IMPORT_CSV, mode='w+', index=False)
 shopify_data
-
-
-# %%
