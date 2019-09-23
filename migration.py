@@ -25,7 +25,7 @@ wc_data_french = wc_full_data[is_french]
 wc_data = wc_full_data[is_french == False]
 # Clean the invalid name
 wc_data['Name'] = wc_data['Name'].astype(str)
-wc_data = wc_data[wc_data['Name'].astype(str).str.contains('#REF!') == False]
+wc_data = wc_data[wc_data['Name'].str.contains('#REF!') == False]
 
 # wc_data contains English rows
 # wc_data_french contains French Rows
@@ -80,10 +80,10 @@ is_variable = shopify_data['WC Type'] == 'variable'
 is_not_variation = shopify_data['WC Type'] != 'variation'
 
 
-wc_data['Packaging'].fillna(value='')
+wc_data['packaging'].fillna(value='')
 
 shopify_data['Option1 Name'] = 'Packaging'
-shopify_data['Option1 Value'] = wc_data['Packaging']
+shopify_data['Option1 Value'] = wc_data['packaging']
 shopify_data.loc[is_simple, 'Option1 Name'] = 'Title'
 shopify_data.loc[is_simple, 'Option1 Value'] = 'Default Title'
 
